@@ -1,43 +1,36 @@
 package org.example.main;
 
-//import org.example.util.LocalSession;
-//import com.snowflake.snowpark_java.*;
-//import com.snowflake.snowpark_java.types.*;
+import com.snowflake.snowpark_java.*;
 
-import org.example.udft.CustomerCategorizeUDTFHandler;
+
+import java.util.HashMap;
+import java.util.Map;
+
+
+import org.example.udft.CustomerCategorizedUDTFHandler1;
+
 
 public class App {
-    /**
-     * A simple stored procedure which creates a 2x2 DataFrame, prints it
-     * to the console, and returns the row count.
-     * @param session A Snowflake Session
-     * @return The count of the DataFrame
-     */
-    //public static Long run(Session session) {
-        
-        // // See: https://docs.snowflake.com/developer-guide/snowpark/reference/java/com/snowflake/snowpark_java/FileOperation.html
-        // Map<String, String> options = new HashMap<>();
-        // options.put("AUTO_COMPRESS", "FALSE");
-        // options.put("OVERWRITE", "TRUE");
-        // session.sql("create stage if not exists drools_tests").show();
-        // session.file().put("customers.csv","@drools_tests",options);
-        // var schema = getCustomerSchema();
-        // DataFrame customersDf = session.read().schema(schema).csv("@drool_tests/customers.cvs");
-        
-        // session.sql("DROP FUNCTION IF EXISTS droolsCategorizer(NUMBER,NUMBER,NUMBER,NUMBER)").show();
-        // var droolsCategorizer = session.udtf().registerPermanent("droolsCategorizer", new CustomerCategorizeUDTFHandler(),"@drools_tests");
-        // customersDf.join(droolsCategorizer, col("id"),col("age"),col("gender"),col("numberOfOrders")).show();
-        //return Long.valueOf(0);
-    //}
 
     /**
      * Main entrypoint. Runs the stored procedure locally for development.
      * @param args
      */
     public static void main(String[] args) {
-        var udtf = new CustomerCategorizeUDTFHandler();
-        //Session session = LocalSession.getSession(false);
-        //App.run(null);
+        var udtf = new CustomerCategorizedUDTFHandler1();
+        Session session = LocalSession.getLocalSession();
+        session.addDependency("/Users/mrojas/snowpark-java-drools/target/snowpark-java-drools-0.0.1-FAT.jar");
+        var drools_classify = session.udtf().registerTemporary("drools_classify", udtf);
+        var customers = session.table("customers");
+        
+   
+        Map<String, Column> drools_args = new HashMap<>();
+        drools_args.put("ARG1",customers.col("\"id\""));
+        drools_args.put("ARG2",customers.col("\"age\""));
+        drools_args.put("ARG3",customers.col("\"gender\""));
+        drools_args.put("ARG4",customers.col("\"numberOfOrders\""));
+        var res = customers.join(drools_classify, drools_args);
+        res.show();
         System.out.println("Done");
     }
 }

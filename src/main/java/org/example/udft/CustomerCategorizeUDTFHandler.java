@@ -15,9 +15,13 @@ import org.example.service.CustomerCategorizeService;
  */
 public class CustomerCategorizeUDTFHandler {
 
-    private CustomerCategorizeService service;
+    private transient CustomerCategorizeService service=null;
 
     public CustomerCategorizeUDTFHandler() {
+
+    }
+
+    private void setupService() {
         var config = new DroolsConfig();
         var container = config.kieContainer();
         this.service = new CustomerCategorizeService(container);
@@ -28,6 +32,7 @@ public class CustomerCategorizeUDTFHandler {
     }
 
     public Stream<CustomerType> process(Long id, Integer age, String gender, Integer numberOfOrders) {
+        if (this.service==null) setupService();
         var customerRequest = new CustomerRequest(id, age, gender, numberOfOrders);
         var response = this.service.getCustomerType(customerRequest);
         return Stream.of(response);
