@@ -19,7 +19,7 @@ public class App {
     public static void main(String[] args) {
         var udtf = new CustomerCategorizedUDTFHandler1();
         Session session = LocalSession.getLocalSession();
-        session.addDependency("/Users/mrojas/snowpark-java-drools/target/snowpark-java-drools-0.0.1-FAT.jar");
+        session.addDependency("target/snowpark-java-drools-0.0.1-FAT.jar");
         var drools_classify = session.udtf().registerTemporary("drools_classify", udtf);
         var customers = session.table("customers");
         
